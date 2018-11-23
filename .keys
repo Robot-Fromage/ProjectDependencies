@@ -1,0 +1,84 @@
+{
+    "keys":
+    [
+        {
+            "name":     "config",
+            "alias":    null,
+            "args":     null,
+            "short":    "Show config",
+            "doc":      "Display contents of local configuration."
+        },
+
+        {
+            "name":     "help",
+            "alias":    "-h",
+            "args":     "[<command>]",
+            "short":    "Display help",
+            "doc":      "Display help for the given command."
+        },
+
+        {
+            "name":     "check",
+            "alias":    "-c",
+            "args":     null,
+            "short":    "Check if download is required",
+            "doc":      "Parse the entire working tree directory in search for missing files according to index, and output if download is needed or not."
+        },
+
+        {
+            "name":     "download",
+            "alias":    "-d",
+            "args":     null,
+            "short":    "Download remote and install",
+            "doc":      "Download dependency file from remote into temporary directory. Then extract and install files into target directories."
+        },
+
+        {
+            "name":     "index",
+            "alias":    "-i",
+            "args":     null,
+            "short":    "Show index",
+            "doc":      "Gather all entries in index and print them to the terminal. These are the files listed for dependencies."
+        },
+
+        {
+            "name":     "status",
+            "alias":    "-s",
+            "args":     null,
+            "short":    "Show status",
+            "doc":      "Gather all entries from working tree and stage, and print them to the terminal."
+        },
+
+        {
+            "name":     "add",
+            "alias":    "-a",
+            "args":     "[<path>]",
+            "short":    "Add file to stage",
+            "doc":      "Add files corresponding to input path from working tree to stage. This does not create files, it adds entries to the stage file. Stage changes are local, they are not tracked by git."
+        },
+
+        {
+            "name":     "reset",
+            "alias":    "-r",
+            "args":     "[<path>]",
+            "short":    "Remove file from stage",
+            "doc":      "Remove files corresponding to input path from stage. This does not actually delete files, only entries from the stage file. Stage changes are local, they are not tracked by git."
+        },
+
+        {
+            "name":     "expunge",
+            "alias":    "-e",
+            "args":     "[<path>]",
+            "short":    "Remove file from index",
+            "doc":      "Remove files corresponding to input path from index. This does not actually delete files, only entries from the index file. Index changes are tracked by git."
+        },
+
+        {
+            "name":     "push",
+            "alias":    "-p",
+            "args":     null,
+            "short":    "Gather and upload to remote",
+            "doc":      "Gather all entries from stage and concatenate them with index. Changes to index file are tracked by git. Then, gather all entries from index and check for consistency ( missing files ). Then gather all files, compress, and upload to remote if configured in private local configuration."
+        }
+    ]
+}

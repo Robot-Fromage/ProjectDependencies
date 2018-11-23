@@ -1,25 +1,30 @@
 #:::::::::::::::::::::::::
 #::
-#:: OdysseyDependencies/utils.py
+#:: ProjectDependencies/utils.py
 #::_______________________
 #::
 #:: Author: Clement BERTHAUD
 #::
-#:: This piece of script is licensed under the WTFPL licence:
+#:: MIT License
+#:: Copyright (c) 2018 ProjectDependencies - Clément BERTHAUD
 #::
-#::  DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
-#::                    Version 2, December 2004
+#:: Permission is hereby granted, free of charge, to any person obtaining a copy
+#:: of this software and associated documentation files (the "Software"), to deal
+#:: in the Software without restriction, including without limitation the rights
+#:: to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#:: copies of the Software, and to permit persons to whom the Software is
+#:: furnished to do so, subject to the following conditions:
 #::
-#:: Copyright (C) 2018 - End of the Universe, Praxinos <code@praxinos.coop>
+#:: The above copyright notice and this permission notice shall be included in all
+#:: copies or substantial portions of the Software.
 #::
-#:: Everyone is permitted to copy and distribute verbatim or modified 
-#:: copies of this license document, and changing it is allowed as long 
-#:: as the name is changed. 
-#::
-#::            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
-#::   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION 
-#::
-#:: 0. You just DO WHAT THE FUCK YOU WANT TO.
+#:: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#:: IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#:: FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#:: AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#:: LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#:: OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#:: SOFTWARE.
 #::
 #:::::::::::::::::::::::::
 import xml.etree.ElementTree as xml
@@ -33,18 +38,15 @@ def make_offset( iSize ):
             str_offset += " "
         return str_offset
 
-def config_error():
-    print( "error: .OdysseyDependencies-config seems to be corrupted" )
-
 def command_error( iCommand ):
-    print( "error:" + "'" + iCommand + "'" + " is not a valid command. See 'OdysseyDependencies help'")
+    print( "error:" + "'" + iCommand + "'" + " is not a valid command. See 'ProjectDependencies help'")
 
 def load_config( iPath, iRequiredEntries ):
     
     def check_entry( iJsonData, iKey ):
         if not iKey in iJsonData:
             print( "error, entry not configured: " + iKey )
-            print( "Set entry in .OdysseyDependencies-config" )
+            print( "Set entry in .config" )
             return False
         else:
             return True
@@ -85,7 +87,7 @@ def gather_ue4_dep_list( iRootDir, iTargets ):
     return ue4_dep_list
 
 def gather_working_tree_list( iRootDir, iTargets ):
-    ue4_dep_list = gather_ue4_dep_list( iRootDir, iTargets )
+    #ue4_dep_list = gather_ue4_dep_list( iRootDir, iTargets )
     working_tree_list = []
     all_files_pattern = "**/*"    
     substr_index = len( iRootDir )
@@ -94,8 +96,8 @@ def gather_working_tree_list( iRootDir, iTargets ):
         for filename in glob.iglob( iRootDir + target + all_files_pattern, recursive=True ):
             if os.path.isfile( filename ):
                 relative_filename = filename[substr_index:].replace( os.sep, '/' )
-                if relative_filename not in ue4_dep_list:
-                    working_tree_list.append( relative_filename )
+                #if relative_filename not in ue4_dep_list:
+                working_tree_list.append( relative_filename )
             count += 1
             print( "Parsing elements in working directory: {0}".format( count ), end="\r" )
     print("")
