@@ -52,7 +52,7 @@ def command( iArgs, iConfig, iDirs, iFiles ):
             for entry in value:
                  print( offset1 + entry )
                 
-    exclude = []
+    exclude = ["keys"]
     for entry in iConfig:
         if not entry in exclude:
             print_entry( entry )
