@@ -31,16 +31,17 @@ import os, sys
 
 # Import setup
 script_dir = os.path.dirname( os.path.realpath( __file__ ) ).replace( os.sep, '/' ) + '/'
+parent_repo_dir = os.path.realpath( script_dir + "../" ).replace( os.sep, '/' )
 sys.path.append( script_dir )
 import ProjectDependencies.utils
 
 # Gather Files
 files = {}
-files["config"]     = script_dir + ".config"
 files["keys"]       = script_dir + ".keys"
-files["ignore"]     = script_dir + ".ignore"
-files["index"]      = script_dir + ".index"
-files["pstage"]     = script_dir + ".stage"
+files["config"]     = parent_repo_dir + ".config"
+files["ignore"]     = parent_repo_dir + ".ignore"
+files["index"]      = parent_repo_dir + ".index"
+files["pstage"]     = parent_repo_dir + ".stage"
 
 # Gather config
 required_entries = [ "url", "file", "targets", "root", "tmp" ]

@@ -127,14 +127,11 @@ def command( iArgs, iConfig, iDirs, iFiles ):
     ftp_wdir = ""
     ftp_port = 21
 
-    if os.path.exists( iFiles["pconfig"] ):
-        pconfig = ProjectDependencies.utils.load_config( iFiles["pconfig"], [] )
-        if pconfig:
-            if "host" in pconfig: ftp_host = pconfig["host"]
-            if "user" in pconfig: ftp_user = pconfig["user"]
-            if "pass" in pconfig: ftp_pass = pconfig["pass"]
-            if "wdir" in pconfig: ftp_wdir = pconfig["wdir"]
-            if "port" in pconfig: ftp_port = pconfig["port"]
+    if "host" in iConfig: ftp_host = iConfig["host"]
+    if "user" in iConfig: ftp_user = iConfig["user"]
+    if "pass" in iConfig: ftp_pass = iConfig["pass"]
+    if "wdir" in iConfig: ftp_wdir = iConfig["wdir"]
+    if "port" in iConfig: ftp_port = iConfig["port"]
 
     if ftp_host == "": ftp_host = input( "host: " )
     if ftp_user == "": ftp_user = input( "user: " )
