@@ -93,6 +93,9 @@ def command( iArgs, iConfig, iDirs, iFiles ):
             missing_list.append( entry )
         else:
             num_installed_files += 1
+            dstdir = os.path.dirname( os.path.realpath( install_file ) )
+            if not os.path.exists( dstdir ):
+                os.mkdir( dstdir )
             shutil.copyfile( tmp_file, install_file )
 
         count += 1
