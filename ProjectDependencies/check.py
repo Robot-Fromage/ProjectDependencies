@@ -37,7 +37,7 @@ def command( iArgs, iConfig, iDirs, iFiles ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
     # Gather working tree and index
-    working_tree_list = ProjectDependencies.utils.gather_working_tree_list( iDirs["root"], iConfig["targets"] )
+    working_tree_list = ProjectDependencies.utils.gather_working_tree_list( iDirs["root"], iConfig["targets"], iFiles["ignore"] )
     index_list = ProjectDependencies.utils.gather_list( iFiles["index"] )
 
     # Check for inconsistencies in index against working directory

@@ -72,7 +72,7 @@ def command( iArgs, iConfig, iDirs, iFiles ):
     substr_index_arg_path = len( arg_path )
 
     # Gather working tree, index and stage
-    working_tree_list = ProjectDependencies.utils.gather_working_tree_list( iDirs["root"], iConfig["targets"] )
+    working_tree_list = ProjectDependencies.utils.gather_working_tree_list( iDirs["root"], iConfig["targets"], iFiles["ignore"] )
     index_list = ProjectDependencies.utils.gather_list( iFiles["index"] )
     ProjectDependencies.utils.check_create_file( iFiles["pstage"] )
     stage_list = ProjectDependencies.utils.gather_list( iFiles["pstage"] )

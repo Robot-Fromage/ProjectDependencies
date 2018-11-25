@@ -86,18 +86,21 @@ def gather_ue4_dep_list( iRootDir, iTargets ):
     print("")
     return ue4_dep_list
 
-def gather_working_tree_list( iRootDir, iTargets ):
+def gather_working_tree_list( iRootDir, iTargets, iIgnoreFile ):
     #ue4_dep_list = gather_ue4_dep_list( iRootDir, iTargets )
     working_tree_list = []
     all_files_pattern = "**/*"    
     substr_index = len( iRootDir )
     count = 0
+
+    ignore_list = gather_list( iIgnoreFile )
+
     for target in iTargets:
         for filename in glob.iglob( iRootDir + target + all_files_pattern, recursive=True ):
             if os.path.isfile( filename ):
                 relative_filename = filename[substr_index:].replace( os.sep, '/' )
-                #if relative_filename not in ue4_dep_list:
-                working_tree_list.append( relative_filename )
+                if relative_filename not in ignore_list:
+                    working_tree_list.append( relative_filename )
             count += 1
             print( "Parsing elements in working directory: {0}".format( count ), end="\r" )
     print("")
