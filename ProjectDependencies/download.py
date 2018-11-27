@@ -36,6 +36,13 @@ from colorama import Fore, Back, Style
 from colorama import init as init_colorama
 init_colorama()
 
+def mkdirtree( iDst ):
+    parent = os.path.dirname( iDst )
+    if not os.path.exists( parent ):
+        mkdirtree( parent )
+    else
+        os.mkdir( iDst )
+
 def command( iArgs, iConfig, iDirs, iFiles ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
@@ -94,8 +101,7 @@ def command( iArgs, iConfig, iDirs, iFiles ):
         else:
             num_installed_files += 1
             dstdir = os.path.dirname( os.path.realpath( install_file ) )
-            if not os.path.exists( dstdir ):
-                os.mkdir( dstdir )
+            mkdirtree( dstdir )
             shutil.copyfile( tmp_file, install_file )
 
         count += 1

@@ -42,7 +42,7 @@ files["config"]     = parent_repo_dir + ".config"
 files["pconfig"]    = parent_repo_dir + ".pconfig"
 files["ignore"]     = parent_repo_dir + ".ignore"
 files["index"]      = parent_repo_dir + ".index"
-files["pstage"]     = parent_repo_dir + ".stage"
+files["pstage"]     = script_dir + ".stage"
 
 # Gather config
 required_entries = [ "url", "file", "targets", "root", "tmp" ]
