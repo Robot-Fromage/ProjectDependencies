@@ -40,7 +40,7 @@ def mkdirtree( iDst ):
     parent = os.path.dirname( iDst )
     if not os.path.exists( parent ):
         mkdirtree( parent )
-    else
+    else:
         os.mkdir( iDst )
 
 def command( iArgs, iConfig, iDirs, iFiles ):
