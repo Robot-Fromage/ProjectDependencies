@@ -56,7 +56,7 @@ files["track"]      = parent_repo_dir   + ".track"      # Contains ProjectDepend
 
 #:::::::::::::::::::::::::
 # Bake required keys
-required_config_keys    = [ "remote", "root", "tmp" ]
+required_config_keys    = [ "remote", "file", "root", "tmp" ]
 required_keys_keys      = [ "keys" ]
 
 
