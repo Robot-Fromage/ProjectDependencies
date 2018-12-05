@@ -28,7 +28,7 @@
 #::
 #:::::::::::::::::::::::::
 import ProjectDependencies.utils
-import urllib.request as urlreq
+import xml.etree.ElementTree as xml
 import os
 
 def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
@@ -71,24 +71,35 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     # Our arg path is ready, bake index for string matching
     substr_index_arg_path = len( arg_path )
 
+    # Gather track & ignore & git track
+    track_list          = ProjectDependencies.utils.gather_list( iFiles["track"] )
+    ignore_list         = ProjectDependencies.utils.gather_list( iFiles["ignore"] )
+    git_tracked_files   = ProjectDependencies.utils.gather_git_tracked_files( iDirs["root"] )
+    # Concatenate ignore with git tracked
+    ignore_list.extend( git_tracked_files )
+
     # Gather working tree, index and stage
-    working_tree_list   = ProjectDependencies.utils.gather_working_tree_list( iDirs["root"], iConfig["targets"], iFiles["ignore"] )
-    index_list          = ProjectDependencies.utils.gather_list( iFiles["index"] )
+    working_tree_list_with_hash = ProjectDependencies.utils.gather_working_tree_list_with_hash( iDirs["root"], track_list, ignore_list )
+    stage_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
+    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
 
-    ProjectDependencies.utils.check_create_file( iFiles["pstage"] )
-    stage_list          = ProjectDependencies.utils.gather_list( iFiles["pstage"] )
+    tpr = ProjectDependencies.utils.resolve_inconsistencies( working_tree_list_with_hash, [ stage_list_with_hash, index_list_with_hash ] )
+    sorted_working_tree_list_with_hash = tpr[0]
+    sorted_stage_list_with_hash = tpr[1][0]
+    sorted_index_list_with_hash = tpr[1][1]
 
-    # Trim staged and index from working tree
-    sorted_working_tree_list = []
-    for entry in working_tree_list:
-        if not entry in stage_list and not entry in index_list:
-            sorted_working_tree_list.append( entry )
+    # Write new lists
+    ProjectDependencies.utils.update_list_with_hash( iFiles["stage"], sorted_stage_list_with_hash )
+    ProjectDependencies.utils.update_list_with_hash( iFiles["index"], sorted_index_list_with_hash )
+
+    # Gather list anew
+    resolved_stage_list_with_hash = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
 
     # Gather add list
     add_list = []
     bEntryAdded = False
-    for entry in sorted_working_tree_list:
-        if entry[:substr_index_arg_path] == arg_path:
+    for entry in sorted_working_tree_list_with_hash:
+        if entry["file"][:substr_index_arg_path] == arg_path:
             add_list.append( entry )
             bEntryAdded = True
 
@@ -98,10 +109,8 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
 
     # Complete stage list
     for entry in add_list:
-        print( ProjectDependencies.utils.make_offset( 8 ) + "staging: " + entry )
-        stage_list.append( entry )
+        print( ProjectDependencies.utils.make_offset( 8 ) + "staging: " + "<" + entry["hash"] + "> " + entry["file"] )
+        resolved_stage_list_with_hash.append( entry )
 
     # Write new stage to disk
-    with open( iFiles["pstage"], 'w') as f:
-        for item in stage_list:
-            f.write("%s\n" % item)
+    ProjectDependencies.utils.update_list_with_hash( iFiles["stage"], resolved_stage_list_with_hash )

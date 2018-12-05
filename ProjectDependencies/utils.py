@@ -27,11 +27,20 @@
 #:: SOFTWARE.
 #::
 #:::::::::::::::::::::::::
+import subprocess
+import os, sys
 import xml.etree.ElementTree as xml
 import glob
 import json
-import os
-import sys
+import hashlib
+
+#:::::::::::::::::::::::::
+# System command
+def system(*args, **kwargs):
+    kwargs.setdefault('stdout', subprocess.PIPE)
+    proc = subprocess.Popen(args, **kwargs)
+    out, err = proc.communicate()
+    return out
 
 #:::::::::::::::::::::::::
 # Errors
@@ -76,6 +85,15 @@ def load_json_with_keys_checked( iPath, iRequiredKeys ):
     return json_data
 
 #:::::::::::::::::::::::::
+# Hash Utils
+def sha256sum( iFilePath ):
+    h = hashlib.sha256()
+    with open( iFilePath, 'rb', buffering=0 ) as f:
+        for b in iter( lambda : f.read( 128*1024 ), b'' ):
+            h.update( b )
+    return h.hexdigest()
+
+#:::::::::::::::::::::::::
 # GUI Feedback
 def fake_progress():
     for x in range( 10000 ):
@@ -105,31 +123,30 @@ def gather_ue4_dep_list( iRootDir, iTargets ):
     print("")
     return ue4_dep_list
 
-def gather_working_tree_list( iRootDir, iTargets, iIgnoreFile ):
-    #ue4_dep_list = gather_ue4_dep_list( iRootDir, iTargets )
+def gather_working_tree_list_with_hash( iRootDir, iTrackList, iIgnoreList ):
     working_tree_list = []
     all_files_pattern = "**/*"
     substr_index = len( iRootDir )
     count = 0
-
-    ignore_list = gather_list( iIgnoreFile )
-
-    for target in iTargets:
+    if not len( iTrackList ):
+        print( "No target specified." )
+    for target in iTrackList:
         for filename in glob.iglob( iRootDir + target + all_files_pattern, recursive=True ):
             if os.path.isfile( filename ):
                 relative_filename = filename[substr_index:].replace( os.sep, '/' )
-                if relative_filename not in ignore_list:
-                    working_tree_list.append( relative_filename )
-            count += 1
+                bIgnored = False
+                for entry in iIgnoreList:
+                    substr_ignore_entry = len( entry )
+                    if relative_filename[:substr_ignore_entry] == entry:
+                        bIgnored = True
+                if not bIgnored:
+                    fhash = sha256sum( filename )
+                    working_tree_list.append( { "file": relative_filename, "hash": fhash } )
+                    count += 1
             print( "Parsing elements in working directory: {0}".format( count ), end="\r" )
-    print("")
+    if len( iTrackList ):
+        print("")
     return working_tree_list
-
-def gather_list( iFilePath ):
-    with open( iFilePath ) as f:
-        result_list = f.readlines()
-    result_list = [ x.strip() for x in result_list ]
-    return result_list
 
 def check_create_file( iFilePath ):
     # Create stage file if it doesn't exist
@@ -141,3 +158,71 @@ def check_create_file( iFilePath ):
 def check_create_dir( iDirPath ):
      if not os.path.exists( iDirPath ):
         os.makedirs( iDirPath )
+
+def gather_list( iFilePath ):
+    check_create_file( iFilePath )
+    with open( iFilePath ) as f:
+        result_list = f.readlines()
+    result_list = [ x.strip() for x in result_list ]
+    return result_list
+
+def gather_list_with_hash( iFilePath ):
+    check_create_file( iFilePath )
+    with open( iFilePath ) as f:
+        result_list = f.readlines()
+    result_list = [ x.strip() for x in result_list ]
+    result_list_with_hash = []
+    for entry in result_list:
+        entry_arr = entry.split( ';' )
+        entry_hash = entry_arr[0]
+        entry_file = entry_arr[1]
+        result_list_with_hash.append( { "file": entry_file, "hash": entry_hash } )
+    return result_list_with_hash
+
+def gather_git_tracked_files( iRootDir ):
+    bak_path = os.getcwd()
+    os.chdir( iRootDir )
+    strfiles = system( "git", "ls-files" ).decode('utf-8').strip()
+    os.chdir( bak_path )
+    return strfiles.split('\n')
+
+def mkdirtree( iDst ):
+    parent = os.path.dirname( iDst )
+    if not os.path.exists( parent ):
+        mkdirtree( parent )
+
+    if not os.path.exists( iDst ):
+        os.mkdir( iDst )
+        
+#:::::::::::::::::::::::::
+# Persistent data manipulation
+def resolve_inconsistencies( iMainList, iResolveLists ):
+    # Trim staged from working tree, and check for updated hashes
+    result_list = []
+
+    if not len( iResolveLists ):
+        return
+
+    for entry in iMainList:
+        bFoundAnywhere = False
+        for resolveList in iResolveLists:
+            obsolete_resolve_hashes = []
+            for resolve_entry in resolveList:
+                if entry["file"] == resolve_entry["file"]:
+                    if  entry["hash"] == resolve_entry["hash"]:
+                        bFoundAnywhere = True
+                    else:
+                        obsolete_resolve_hashes.append( resolve_entry )
+            for obs_entry in obsolete_resolve_hashes:
+                resolveList.remove( obs_entry )
+
+        if not bFoundAnywhere:
+            result_list.append( entry )
+    return result_list, iResolveLists
+
+def update_list_with_hash( iFilePath, iList ):
+    # Write new stage to disk
+    with open( iFilePath, 'w') as f:
+        for item in iList:
+            stritem = item["hash"] + ";" + item["file"]
+            f.write( "%s\n" % stritem )

@@ -33,18 +33,38 @@ from colorama import Fore, Back, Style
 from colorama import init as init_colorama
 init_colorama()
 
-def command( iArgs, iConfig, iDirs, iFiles ):
+def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
-    # Gather working tree and index
-    working_tree_list = ProjectDependencies.utils.gather_working_tree_list( iDirs["root"], iConfig["targets"], iFiles["ignore"] )
-    index_list = ProjectDependencies.utils.gather_list( iFiles["index"] )
+    # Gather track & ignore & git track
+    track_list          = ProjectDependencies.utils.gather_list( iFiles["track"] )
+    ignore_list         = ProjectDependencies.utils.gather_list( iFiles["ignore"] )
+    git_tracked_files   = ProjectDependencies.utils.gather_git_tracked_files( iDirs["root"] )
+    # Concatenate ignore with git tracked
+    ignore_list.extend( git_tracked_files )
+
+    # Gather working tree, index and stage
+    working_tree_list_with_hash = ProjectDependencies.utils.gather_working_tree_list_with_hash( iDirs["root"], track_list, ignore_list )
+    stage_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
+    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
+
+    tpr = ProjectDependencies.utils.resolve_inconsistencies( working_tree_list_with_hash, [ stage_list_with_hash, index_list_with_hash ] )
+    sorted_working_tree_list_with_hash = tpr[0]
+    sorted_stage_list_with_hash = tpr[1][0]
+    sorted_index_list_with_hash = tpr[1][1]
+
+    # Write new lists
+    ProjectDependencies.utils.update_list_with_hash( iFiles["stage"], sorted_stage_list_with_hash )
+    ProjectDependencies.utils.update_list_with_hash( iFiles["index"], sorted_index_list_with_hash )
+
+    # Gather index anew
+    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
 
     # Check for inconsistencies in index against working directory
     missing_index_list = []
     bFoundMissingIndexedFile = False
-    for entry in index_list:
-        absolute_entry = iDirs["root"] + entry
+    for entry in index_list_with_hash:
+        absolute_entry = iDirs["root"] + entry["file"]
         if not os.path.exists( absolute_entry ):
             bFoundMissingIndexedFile = True
             missing_index_list.append( entry )
@@ -54,7 +74,7 @@ def command( iArgs, iConfig, iDirs, iFiles ):
         print( "Here is the list of missing indexed files:" )
         print( Fore.RED )
         for entry in missing_index_list:
-            print( ProjectDependencies.utils.make_offset( 4 ) + "missing: " + entry )
+            print( ProjectDependencies.utils.make_offset( 4 ) + "missing: " + entry["file"] )
         print(Style.RESET_ALL)
     else:
         print( "Everything's fine, chill out." )

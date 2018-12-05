@@ -33,48 +33,57 @@ from colorama import Fore, Back, Style
 from colorama import init as init_colorama
 init_colorama()
 
-def command( iArgs, iConfig, iDirs, iFiles ):
+def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
-    # Gather working tree, index and stage
-    working_tree_list = ProjectDependencies.utils.gather_working_tree_list( iDirs["root"], iConfig["targets"], iFiles["ignore"] )
-    index_list = ProjectDependencies.utils.gather_list( iFiles["index"] )
-    ProjectDependencies.utils.check_create_file( iFiles["pstage"] )
-    stage_list = ProjectDependencies.utils.gather_list( iFiles["pstage"] )
+    # Gather track & ignore & git track
+    track_list          = ProjectDependencies.utils.gather_list( iFiles["track"] )
+    ignore_list         = ProjectDependencies.utils.gather_list( iFiles["ignore"] )
+    git_tracked_files   = ProjectDependencies.utils.gather_git_tracked_files( iDirs["root"] )
+    # Concatenate ignore with git tracked
+    ignore_list.extend( git_tracked_files )
 
-    # Trim staged and indexed from working tree
-    sorted_working_tree_list = []
-    for entry in working_tree_list:
-        if not entry in stage_list and not entry in index_list:
-            sorted_working_tree_list.append( entry )
+    # Gather working tree, index and stage
+    working_tree_list_with_hash = ProjectDependencies.utils.gather_working_tree_list_with_hash( iDirs["root"], track_list, ignore_list )
+    stage_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
+    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
+
+    tpr = ProjectDependencies.utils.resolve_inconsistencies( working_tree_list_with_hash, [ stage_list_with_hash, index_list_with_hash ] )
+    sorted_working_tree_list_with_hash = tpr[0]
+    sorted_stage_list_with_hash = tpr[1][0]
+    sorted_index_list_with_hash = tpr[1][1]
+
+    # Write new lists
+    ProjectDependencies.utils.update_list_with_hash( iFiles["stage"], sorted_stage_list_with_hash )
+    ProjectDependencies.utils.update_list_with_hash( iFiles["index"], sorted_index_list_with_hash )
 
     # If there are files in stage, print them with info
-    if len( stage_list ):
+    if len( stage_list_with_hash ):
         # Print info
         print( "Staged changes:")
         print( ProjectDependencies.utils.make_offset( 4 ) + "( Use 'ProjectDependencies reset <path>' to unstage )" )
 
         # Print stage
         print( Fore.GREEN )
-        for entry in stage_list:
-            print( ProjectDependencies.utils.make_offset( 8 ) + "staged: " + entry )
+        for entry in stage_list_with_hash:
+            print( ProjectDependencies.utils.make_offset( 8 ) + "staged: " + "<" + entry["hash"] + "> " + entry["file"] )
         print(Style.RESET_ALL)
 
     # If there are files in both stage and sorted working tree, print a blank line beetween the reports
-    if len( stage_list ) and len( sorted_working_tree_list ):
+    if len( stage_list_with_hash ) and len( sorted_working_tree_list_with_hash ):
         print( "" )
 
     # If there are files in sorted working tree, print them with info
-    if len( sorted_working_tree_list ):
+    if len( sorted_working_tree_list_with_hash ):
         # Print info
         print( "Unstaged changes:")
         print( ProjectDependencies.utils.make_offset( 4 ) + "( Use 'ProjectDependencies add <path>' to stage )" )
 
         # Print sorted working tree
         print( Fore.RED )
-        for entry in sorted_working_tree_list:
-            print( ProjectDependencies.utils.make_offset( 8 ) + "unstaged: " + entry )
+        for entry in sorted_working_tree_list_with_hash:
+            print( ProjectDependencies.utils.make_offset( 8 ) + "unstaged: " + "<" + entry["hash"] + "> " + entry["file"] )
         print(Style.RESET_ALL)
 
-    if not len( stage_list ) and not len( sorted_working_tree_list ):
+    if not len( stage_list_with_hash ) and not len( sorted_working_tree_list_with_hash ):
         print( "Nothing to show.")

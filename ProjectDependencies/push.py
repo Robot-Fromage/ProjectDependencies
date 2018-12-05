@@ -38,20 +38,39 @@ from colorama import Fore, Back, Style
 from colorama import init as init_colorama
 init_colorama()
 
-def command( iArgs, iConfig, iDirs, iFiles ):
+def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
+    # Gather track & ignore & git track
+    track_list          = ProjectDependencies.utils.gather_list( iFiles["track"] )
+    ignore_list         = ProjectDependencies.utils.gather_list( iFiles["ignore"] )
+    git_tracked_files   = ProjectDependencies.utils.gather_git_tracked_files( iDirs["root"] )
+    # Concatenate ignore with git tracked
+    ignore_list.extend( git_tracked_files )
+
     # Gather working tree, index and stage
-    working_tree_list = ProjectDependencies.utils.gather_working_tree_list( iDirs["root"], iConfig["targets"], iFiles["ignore"] )
-    index_list = ProjectDependencies.utils.gather_list( iFiles["index"] )
-    ProjectDependencies.utils.check_create_file( iFiles["pstage"] )
-    stage_list = ProjectDependencies.utils.gather_list( iFiles["pstage"] )
+    working_tree_list_with_hash = ProjectDependencies.utils.gather_working_tree_list_with_hash( iDirs["root"], track_list, ignore_list )
+    stage_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
+    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
+
+    tpr = ProjectDependencies.utils.resolve_inconsistencies( working_tree_list_with_hash, [ stage_list_with_hash, index_list_with_hash ] )
+    sorted_working_tree_list_with_hash = tpr[0]
+    sorted_stage_list_with_hash = tpr[1][0]
+    sorted_index_list_with_hash = tpr[1][1]
+
+    # Write new lists
+    ProjectDependencies.utils.update_list_with_hash( iFiles["stage"], sorted_stage_list_with_hash )
+    ProjectDependencies.utils.update_list_with_hash( iFiles["index"], sorted_index_list_with_hash )
+
+    # Gather anew
+    stage_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
+    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
 
     # Check for inconsistencies in stage against working directory
     inconsistent_stage_list = []
     bFoundInconsistenciesInStage = False
-    for entry in stage_list:
-        absolute_entry = iDirs["root"] + entry
+    for entry in stage_list_with_hash:
+        absolute_entry = iDirs["root"] + entry["file"]
         if not os.path.exists( absolute_entry ):
             bFoundInconsistenciesInStage = True
             inconsistent_stage_list.append( entry )
@@ -59,8 +78,8 @@ def command( iArgs, iConfig, iDirs, iFiles ):
     # Check for inconsistencies in index against working directory
     inconsistent_index_list = []
     bFoundInconsistenciesInIndex = False
-    for entry in index_list:
-        absolute_entry = iDirs["root"] + entry
+    for entry in index_list_with_hash:
+        absolute_entry = iDirs["root"] + entry["file"]
         if not os.path.exists( absolute_entry ):
             bFoundInconsistenciesInIndex = True
             inconsistent_index_list.append( entry )
@@ -69,7 +88,7 @@ def command( iArgs, iConfig, iDirs, iFiles ):
         print( "Inconsistencies were found in stage, the following files do not appear to be part of the working tree:" )
         print( Fore.RED )
         for entry in inconsistent_stage_list:
-            print( ProjectDependencies.utils.make_offset( 8 ) + "missing: " + entry )
+            print( ProjectDependencies.utils.make_offset( 8 ) + "missing: " + entry["file"] )
         print( Style.RESET_ALL )
         print( ProjectDependencies.utils.make_offset( 4 ) + "Remove them using ProjectDependencies reset <path> before pushing.")
 
@@ -77,22 +96,23 @@ def command( iArgs, iConfig, iDirs, iFiles ):
         print( "Inconsistencies were found in index, the following files do not appear to be part of the working tree:" )
         print( Fore.RED )
         for entry in inconsistent_index_list:
-            print( ProjectDependencies.utils.make_offset( 8 ) + "missing: " + entry )
+            print( ProjectDependencies.utils.make_offset( 8 ) + "missing: " + entry["file"] )
         print( Style.RESET_ALL )
         print( ProjectDependencies.utils.make_offset( 4 ) + "Solve this by checkout with git or download again or remove them from index manually." )
 
     # Move stage to index
-    for entry in stage_list:
-        print( ProjectDependencies.utils.make_offset( 8 ) + "indexing: " + entry )
-        index_list.append( entry )
+    for entry in stage_list_with_hash:
+        print( ProjectDependencies.utils.make_offset( 8 ) + "indexing: " + entry["file"] )
+        index_list_with_hash.append( entry )
     
     # Write new stage to disk
     with open( iFiles["index"], 'w') as f:
-        for item in index_list:
-            f.write("%s\n" % item)
+        for item in index_list_with_hash:
+            strw = item["hash"] + ";" + item["file"]
+            f.write("%s\n" % strw)
 
     # Erase stage
-    open( iFiles["pstage"], 'w').close()
+    open( iFiles["stage"], 'w').close()
 
     # Gathering dependencies in TMP
     if os.path.exists( iDirs["tmp"] ):
@@ -105,10 +125,10 @@ def command( iArgs, iConfig, iDirs, iFiles ):
     ProjectDependencies.utils.check_create_dir( iDirs["tmp"] )
 
     # Gather index anew
-    index_list = ProjectDependencies.utils.gather_list( iFiles["index"] )
-    for entry in index_list:
-        src = iDirs["root"] + entry
-        dst = iDirs["tmp"] + entry
+    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
+    for entry in index_list_with_hash:
+        src = iDirs["root"] + entry["file"]
+        dst = iDirs["tmp"] + entry["file"]
         parentdst = os.path.dirname( dst )
         if not os.path.exists( parentdst ):
             os.makedirs( parentdst )

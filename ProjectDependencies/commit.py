@@ -1,6 +1,6 @@
 #:::::::::::::::::::::::::
 #::
-#:: ProjectDependencies/config.py
+#:: ProjectDependencies/add.py
 #::_______________________
 #::
 #:: Author: Clement BERTHAUD
@@ -28,31 +28,29 @@
 #::
 #:::::::::::::::::::::::::
 import ProjectDependencies.utils
+import os
 
 def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
-    def print_entry( iEntry ):
-        name    = iEntry + ":"
-        value   = iConfig[iEntry]
+    # Gather working tree, index and stage
+    stage_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
+    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
 
-        lname   = len( name )
-        iname = 4
-        ivalue = 16
+    tpr = ProjectDependencies.utils.resolve_inconsistencies( stage_list_with_hash, [ index_list_with_hash ] )
+    sorted_stage_list_with_hash = tpr[0]
+    sorted_index_list_with_hash = tpr[1][0]
 
-        if isinstance( value, str):
-            offset0 = ProjectDependencies.utils.make_offset( iname )
-            offset1 = ProjectDependencies.utils.make_offset( ivalue - lname - iname )
-            print( offset0 + name + offset1 + value )
-        
-        if isinstance( value, list ):
-            offset0 = ProjectDependencies.utils.make_offset( iname )
-            offset1 = ProjectDependencies.utils.make_offset( ivalue )
-            print( offset0 + name )
-            for entry in value:
-                 print( offset1 + entry )
-                
-    exclude = []
-    for entry in iConfig:
-        if not entry in exclude:
-            print_entry( entry )
+    # Gather list anew
+    resolved_index_list_with_hash = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
+
+    # Complete stage list
+    for entry in sorted_stage_list_with_hash:
+        print( ProjectDependencies.utils.make_offset( 8 ) + "comitting: " + "<" + entry["hash"] + "> " + entry["file"] )
+        resolved_index_list_with_hash.append( entry )
+
+    # Erase stage
+    open( iFiles["stage"], 'w').close()
+
+    # Write new index to disk
+    ProjectDependencies.utils.update_list_with_hash( iFiles["index"], resolved_index_list_with_hash )

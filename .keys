@@ -10,6 +10,14 @@
         },
 
         {
+            "name":     "targets",
+            "alias":    null,
+            "args":     null,
+            "short":    "Show targets tracked directories",
+            "doc":      "Display contents .track file."
+        },
+
+        {
             "name":     "help",
             "alias":    "-h",
             "args":     "[<command>]",
@@ -87,6 +95,14 @@
             "args":     "[<path>]",
             "short":    "Remove folder from track list",
             "doc":      "Remove specified folder from the list of tracked folders. Working tree will no longer return contents of this folders"
+        },
+
+        {
+            "name":     "commit",
+            "alias":    null,
+            "args":     null,
+            "short":    "Concatenate stage into index",
+            "doc":      "Move all registered entries from stage into index"
         },
 
         {

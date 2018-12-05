@@ -32,27 +32,18 @@ import ProjectDependencies.utils
 def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
+    # Gather track
+    ProjectDependencies.utils.check_create_file( iFiles["track"] )
+    track_list = ProjectDependencies.utils.gather_list( iFiles["track"] )
+
     def print_entry( iEntry ):
-        name    = iEntry + ":"
-        value   = iConfig[iEntry]
+        value   = iEntry
+        offset0 = ProjectDependencies.utils.make_offset( 4 )
+        print( offset0 + value )
 
-        lname   = len( name )
-        iname = 4
-        ivalue = 16
+    if not len( track_list ):
+        print( "Nothing to show" )
+        return
 
-        if isinstance( value, str):
-            offset0 = ProjectDependencies.utils.make_offset( iname )
-            offset1 = ProjectDependencies.utils.make_offset( ivalue - lname - iname )
-            print( offset0 + name + offset1 + value )
-        
-        if isinstance( value, list ):
-            offset0 = ProjectDependencies.utils.make_offset( iname )
-            offset1 = ProjectDependencies.utils.make_offset( ivalue )
-            print( offset0 + name )
-            for entry in value:
-                 print( offset1 + entry )
-                
-    exclude = []
-    for entry in iConfig:
-        if not entry in exclude:
-            print_entry( entry )
+    for entry in track_list:
+        print_entry( entry )

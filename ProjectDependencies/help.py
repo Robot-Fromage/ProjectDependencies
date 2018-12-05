@@ -33,7 +33,6 @@ from colorama import init as init_colorama
 init_colorama()
 
 def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
-
     style_title = Back.WHITE + Fore.BLACK
     style_text  = Back.BLACK + Fore.WHITE
 

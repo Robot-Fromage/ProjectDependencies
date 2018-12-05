@@ -31,7 +31,7 @@ import ProjectDependencies.utils
 import urllib.request as urlreq
 import os
 
-def command( iArgs, iConfig, iDirs, iFiles ):
+def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     # Check args
     if len( iArgs ) > 1:
         print( "Additional arguments were ignored for this command" )
@@ -60,19 +60,20 @@ def command( iArgs, iConfig, iDirs, iFiles ):
     substr_index_arg_path = len( arg_path )
 
     # Gather index
-    index_list = ProjectDependencies.utils.gather_list( iFiles["index"] )
+    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
 
     # Trim from stage if needed
     sorted_expunge_index = []
-    for entry in index_list:
-        if not entry[:substr_index_arg_path] == arg_path:
+    for entry in index_list_with_hash:
+        if not entry["file"][:substr_index_arg_path] == arg_path:
             # If the entry doesn't match path, we keep it in the new stage
             sorted_expunge_index.append( entry )
         else:
             # Else we notify it was not kept
-            print( "    Expunging file: " + entry )
+            print( "    Expunging file: " + entry["file"] )
 
     # Write new stage to disk
     with open( iFiles["index"], 'w') as f:
         for item in sorted_expunge_index:
-            f.write("%s\n" % item)
+            strw = item["hash"] + ";" + item["file"]
+            f.write("%s\n" % strw)
