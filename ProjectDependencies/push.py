@@ -128,7 +128,7 @@ def command( iArgs, iConfig, iDirs, iFiles ):
     ftp_port = 21
 
     if os.path.exists( iFiles["pconfig"] ):
-        pconfig = ProjectDependencies.utils.load_config( iFiles["pconfig"], [] )
+        pconfig = ProjectDependencies.utils.load_json_with_keys( iFiles["pconfig"], [] )
         if pconfig:
             if "host" in pconfig: ftp_host = pconfig["host"]
             if "user" in pconfig: ftp_user = pconfig["user"]

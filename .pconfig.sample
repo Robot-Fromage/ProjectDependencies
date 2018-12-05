@@ -1,0 +1,7 @@
+{
+    "host": "ftp.website.com",
+    "user": "user",
+    "pass": "password",
+    "wdir": "/www/project/dev/dep/",
+    "port": 21
+}

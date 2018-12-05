@@ -1,6 +1,6 @@
 #:::::::::::::::::::::::::
 #::
-#:: ProjectDependencies/add.py
+#:: ProjectDependencies/track.py
 #::_______________________
 #::
 #:: Author: Clement BERTHAUD
@@ -27,9 +27,11 @@
 #:: SOFTWARE.
 #::
 #:::::::::::::::::::::::::
-import ProjectDependencies.utils
-import urllib.request as urlreq
 import os
+import ProjectDependencies.utils
+from colorama import Fore, Back, Style
+from colorama import init as init_colorama
+init_colorama()
 
 def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     # Check args
@@ -42,66 +44,49 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
         arg_path = iArgs[0]
 
     if arg_path == "":
-        print( "Nothing specified, nothing added." )
+        print( "Nothing specified, nothing done." )
         return
 
     # Processing with path parsing, simulate regexp
-    bMustBeExact = False
+    bMustBeExact = True
     if arg_path.endswith( '*' ):
         arg_path = arg_path[:-1]
-        bMustBeExact = False
-    else:
-        bMustBeExact = True
 
     # Bake substring indexes
     substr_index_root_dir = len( iDirs["root"] )
 
-    # If no regexp, path must match a real file or directory withing the working tree
+    # If no regexp, path must match a real folder withing the working tree
     if bMustBeExact:
         if not arg_path[:substr_index_root_dir] == iDirs["root"]:
             arg_path = iDirs["root"] + arg_path
-        if not os.path.exists( arg_path ):
+        if not os.path.isdir( arg_path ):
             print( "The specified path did not match any element in the working tree." )
             return
 
     # Strip absolute if needed, make path relative to root
     if arg_path[:substr_index_root_dir] == iDirs["root"]:
         arg_path = arg_path[substr_index_root_dir:]
+    if not arg_path.endswith( '/' ):
+        arg_path = arg_path + '/'
 
-    # Our arg path is ready, bake index for string matching
-    substr_index_arg_path = len( arg_path )
+    # Gather track
+    ProjectDependencies.utils.check_create_file( iFiles["track"] )
+    track_list = ProjectDependencies.utils.gather_list( iFiles["track"] )
 
-    # Gather working tree, index and stage
-    working_tree_list   = ProjectDependencies.utils.gather_working_tree_list( iDirs["root"], iConfig["targets"], iFiles["ignore"] )
-    index_list          = ProjectDependencies.utils.gather_list( iFiles["index"] )
-
-    ProjectDependencies.utils.check_create_file( iFiles["pstage"] )
-    stage_list          = ProjectDependencies.utils.gather_list( iFiles["pstage"] )
-
-    # Trim staged and index from working tree
-    sorted_working_tree_list = []
-    for entry in working_tree_list:
-        if not entry in stage_list and not entry in index_list:
-            sorted_working_tree_list.append( entry )
-
-    # Gather add list
-    add_list = []
+    # Check if already exists
     bEntryAdded = False
-    for entry in sorted_working_tree_list:
-        if entry[:substr_index_arg_path] == arg_path:
-            add_list.append( entry )
-            bEntryAdded = True
+    if not arg_path in track_list:
+        bEntryAdded = True
 
-    if bEntryAdded == False:
-        print( "The specified path did not match any element in the working tree." )
+    if not bEntryAdded:
+        print( "The specified path did not match any directory in the working tree." )
         return
 
-    # Complete stage list
-    for entry in add_list:
-        print( ProjectDependencies.utils.make_offset( 8 ) + "staging: " + entry )
-        stage_list.append( entry )
+    # Complete track list
+    print( ProjectDependencies.utils.make_offset( 8 ) + "tracking: " + arg_path )
+    track_list.append( arg_path )
 
-    # Write new stage to disk
-    with open( iFiles["pstage"], 'w') as f:
-        for item in stage_list:
+    # Write new track to disk
+    with open( iFiles["track"], 'w') as f:
+        for item in track_list:
             f.write("%s\n" % item)

@@ -27,57 +27,53 @@
 #:: SOFTWARE.
 #::
 #:::::::::::::::::::::::::
+# Basic Imports
 import os, sys
 
-# Import setup
-script_dir = os.path.dirname( os.path.realpath( __file__ ) ).replace( os.sep, '/' ) + '/'
-parent_repo_dir = os.path.realpath( script_dir + "../" ).replace( os.sep, '/' )
-sys.path.append( script_dir )
+
+#:::::::::::::::::::::::::
+# Import Setup
+script_dir      = os.path.dirname( os.path.realpath( __file__ ) ).replace( os.sep, '/' ) + '/'  # The directory in which the script is located.
+parent_repo_dir = os.path.realpath( script_dir + "../" ).replace( os.sep, '/' )                 # The parent repository in which ProjectDependencies is located.
+sys.path.append( script_dir )                                                                   # Add script dir to sys path in order to import relative modules.
+# Import local relative utils module.
 import ProjectDependencies.utils
 
-# Gather Files
+
+#:::::::::::::::::::::::::
+# Gather Files Paths
 files = {}
-files["keys"]       = script_dir + ".keys"
-files["config"]     = parent_repo_dir + ".config"
-files["pconfig"]    = parent_repo_dir + ".pconfig"
-files["ignore"]     = parent_repo_dir + ".ignore"
-files["index"]      = parent_repo_dir + ".index"
-files["pstage"]     = script_dir + ".stage"
+# Local files in ProjectDependencies submodule
+files["keys"]       = script_dir        + ".keys"       # Contains internal key specs for commands.
+files["stage"]      = script_dir        + ".stage"       # Contains internal private staging data.
+# External files outside ProjectDependencies submodule
+files["config"]     = parent_repo_dir   + ".config"     # Contains ProjectDependencies config for parent repo.
+files["pconfig"]    = parent_repo_dir   + ".pconfig"    # Contains ProjectDependencies private config for parent repo.
+files["ignore"]     = parent_repo_dir   + ".ignore"     # Contains ProjectDependencies ignore for parent repo.
+files["index"]      = parent_repo_dir   + ".index"      # Contains ProjectDependencies index for parent repo.
+files["track"]      = parent_repo_dir   + ".track"      # Contains ProjectDependencies track for parent repo.
 
-# Gather config
-required_entries = [ "url", "file", "targets", "root", "tmp" ]
-if not os.path.exists( files["config"] ):
-    print( "error: '.config' not found" )
-    sys.exit()
-config = ProjectDependencies.utils.load_config( files["config"], required_entries )
-if config == 0:
-    print( "error: .config lacks some entries" )
-    sys.exit()
 
+#:::::::::::::::::::::::::
+# Bake required keys
+required_config_keys    = [ "remote", "root", "tmp" ]
+required_keys_keys      = [ "keys" ]
+
+
+#:::::::::::::::::::::::::
+# Gather config and keys
+config  = ProjectDependencies.utils.load_json_with_keys_checked( files["config"],   required_config_keys )
+keys    = ProjectDependencies.utils.load_json_with_keys_checked( files["keys"],     required_keys_keys )
+
+#:::::::::::::::::::::::::
 # Gather Dirs
 dirs = {}
-dirs["root"]    = os.path.realpath( script_dir + config["root"] ).replace( os.sep, '/' )
-dirs["tmp"]     = script_dir + config["tmp"]
-dirs["script"]  = script_dir
+dirs["root"]    = os.path.realpath( script_dir + config["root"] ).replace( os.sep, '/' )    # The root of the parent repository.
+dirs["tmp"]     = parent_repo_dir + config["tmp"]                                           # The location of tmp in parent repository.
+dirs["script"]  = script_dir                                                                # The location of the script directory.
 
-# Gather keys
-if not os.path.exists( files["keys"] ):
-    print( "error: '.keys' not found" )
-    sys.exit()
-keys = ProjectDependencies.utils.load_config( files["keys"], [] )
-if keys == 0:
-    print( "error: .keys lacks some entries" )
-    sys.exit()
 
-# Concatenate keys in config
-config["keys"] = keys["keys"]
-
-# Gather commands
-modules  = {}
-commands = {}
-for entry in keys["keys"]: modules[ entry["name"]] = __import__( "ProjectDependencies." + entry["name"], fromlist=[ "ProjectDependencies" ] )
-for entry in keys["keys"]: commands[entry["name"]] = getattr( modules[entry["name"]], "command" )
-
+#:::::::::::::::::::::::::
 # Parse args
 command = ""
 args    = []
@@ -85,10 +81,19 @@ if len( sys.argv ) > 1:
     command = sys.argv[1]   # Gather command
     args    = sys.argv[2:]  # Gather args
 
+
+#:::::::::::::::::::::::::
 # Exec
 for entry in keys["keys"]:
+    # Check if the input command is a registered key.
     if command == entry["name"] or command == entry["alias"]:
-        commands[ entry["name"] ]( args, config, dirs, files )
+        # Import only the module we need dynamically.
+        module = __import__( "ProjectDependencies." + entry["name"], fromlist=[ "ProjectDependencies" ] )
+        # Find the command in the module and execute it
+        getattr( modules[entry["name"]], "command" )( args, files, config, dirs, keys )
         sys.exit()
 
-ProjectDependencies.utils.command_error( command )
+
+#:::::::::::::::::::::::::
+# Error handling
+ProjectDependencies.utils.fatal_error_command( command )

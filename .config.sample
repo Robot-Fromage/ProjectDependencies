@@ -1,17 +1,6 @@
 {
-    "url": "https://website.com/dev/dep/",
+    "remote": "https://website.com/dev/dep/",
     "file": "dep.tar.gz",
     "root": "../../",
     "tmp": "tmp/",
-
-    "targets":
-    [
-        "Engine/Content/"
-    ],
-
-    "host": "ftp.website.com",
-    "user": "user",
-    "pass": "password",
-    "wdir": "/www/project/dev/dep/",
-    "port": 21
 }

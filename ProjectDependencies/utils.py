@@ -31,35 +31,52 @@ import xml.etree.ElementTree as xml
 import glob
 import json
 import os
+import sys
 
-def make_offset( iSize ):
-        str_offset = ""
-        for i in range( iSize ):
-            str_offset += " "
-        return str_offset
+#:::::::::::::::::::::::::
+# Errors
+def fatal_error_file_X( iFile, iMessage ):
+    print( "error: file '" + iFile + "' " + iMessage )
+    sys.exit()
 
-def command_error( iCommand ):
+def fatal_error_file_missing( iFile ):
+    fatal_error_file_X( iFile, "missing" )
+
+def fatal_error_file_bad_config( iFile ):
+    fatal_error_file_X( iFile, "bad config" )
+
+def fatal_error_command( iCommand ):
     print( "error:" + "'" + iCommand + "'" + " is not a valid command. See 'ProjectDependencies help'")
+    sys.exit()
 
-def load_config( iPath, iRequiredEntries ):
-    
-    def check_entry( iJsonData, iKey ):
-        if not iKey in iJsonData:
-            print( "error, entry not configured: " + iKey )
-            print( "Set entry in .config" )
-            return False
-        else:
-            return True
+#:::::::::::::::::::::::::
+# String Utils
+def make_offset( iSize ):
+    str_offset = ""
+    for i in range( iSize ):
+        str_offset += " "
+    return str_offset
 
-    config_file = open( iPath )
-    config_data = json.load( config_file )
-    
-    for entry in iRequiredEntries:
-        if not check_entry( config_data, entry ):
+#:::::::::::::::::::::::::
+# Json Load
+def load_json_with_keys( iPath, iRequiredKeys ):
+    json_data = json.load( open( iPath ) )
+    for entry in iRequiredKeys:
+        if not entry in json_data:
+            print( "error: key not configured '" + entry + "'" )
             return 0
+    return json_data
 
-    return config_data
+def load_json_with_keys_checked( iPath, iRequiredKeys ):
+    if not os.path.exists( iPath ):
+        fatal_error_file_missing( iPath )
+    json_data = ProjectDependencies.utils.load_json_with_keys( iPath, iRequiredKeys )
+    if not json_data:
+        fatal_error_file_bad_config( iPath )
+    return json_data
 
+#:::::::::::::::::::::::::
+# GUI Feedback
 def fake_progress():
     for x in range( 10000 ):
         print( "Progress {:2.1%}".format( x / 10000 ), end="\r" )
@@ -68,6 +85,8 @@ def notify_ignore_args( iArgs ):
     if len( iArgs ):
         print( "Additional arguments were ignored: " + str( iArgs ) )
 
+#:::::::::::::::::::::::::
+# Persistent data manipulation
 def gather_ue4_dep_list( iRootDir, iTargets ):
     ue4_dep_list = []
     ue4_dep_tree = xml.parse( iRootDir + ".ue4dependencies" )
@@ -89,7 +108,7 @@ def gather_ue4_dep_list( iRootDir, iTargets ):
 def gather_working_tree_list( iRootDir, iTargets, iIgnoreFile ):
     #ue4_dep_list = gather_ue4_dep_list( iRootDir, iTargets )
     working_tree_list = []
-    all_files_pattern = "**/*"    
+    all_files_pattern = "**/*"
     substr_index = len( iRootDir )
     count = 0
 

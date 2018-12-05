@@ -74,6 +74,22 @@
         },
 
         {
+            "name":     "track",
+            "alias":    "-t",
+            "args":     "[<path>]",
+            "short":    "Add folder to track list",
+            "doc":      "Add specified folder to the list of tracked folders. Working tree will return contents of these tracked folders"
+        },
+
+        {
+            "name":     "untrack",
+            "alias":    "-u",
+            "args":     "[<path>]",
+            "short":    "Remove folder from track list",
+            "doc":      "Remove specified folder from the list of tracked folders. Working tree will no longer return contents of this folders"
+        },
+
+        {
             "name":     "push",
             "alias":    "-p",
             "args":     null,
