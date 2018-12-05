@@ -70,7 +70,7 @@ def load_json_with_keys( iPath, iRequiredKeys ):
 def load_json_with_keys_checked( iPath, iRequiredKeys ):
     if not os.path.exists( iPath ):
         fatal_error_file_missing( iPath )
-    json_data = ProjectDependencies.utils.load_json_with_keys( iPath, iRequiredKeys )
+    json_data = load_json_with_keys( iPath, iRequiredKeys )
     if not json_data:
         fatal_error_file_bad_config( iPath )
     return json_data

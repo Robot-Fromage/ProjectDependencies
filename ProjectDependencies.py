@@ -90,7 +90,7 @@ for entry in keys["keys"]:
         # Import only the module we need dynamically.
         module = __import__( "ProjectDependencies." + entry["name"], fromlist=[ "ProjectDependencies" ] )
         # Find the command in the module and execute it
-        getattr( modules[entry["name"]], "command" )( args, files, config, dirs, keys )
+        getattr( module, "command" )( args, files, config, dirs, keys )
         sys.exit()
 
 

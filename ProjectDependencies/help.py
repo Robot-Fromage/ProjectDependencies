@@ -32,7 +32,7 @@ from colorama import Fore, Back, Style
 from colorama import init as init_colorama
 init_colorama()
 
-def command( iArgs, iConfig, iDirs, iFiles ):
+def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
 
     style_title = Back.WHITE + Fore.BLACK
     style_text  = Back.BLACK + Fore.WHITE
@@ -67,7 +67,7 @@ def command( iArgs, iConfig, iDirs, iFiles ):
         print_title()
         print( "These are the available commands:" )
         print( "" )
-        for entry in iConfig["keys"]:
+        for entry in iKeys["keys"]:
             print_entry( entry )
 
     # Parse args
@@ -81,7 +81,7 @@ def command( iArgs, iConfig, iDirs, iFiles ):
         return
 
     bFound = False
-    for entry in iConfig["keys"]:
+    for entry in iKeys["keys"]:
         if help_command == entry["name"] or help_command == entry["alias"]:
             bFound = True
             print_title()
