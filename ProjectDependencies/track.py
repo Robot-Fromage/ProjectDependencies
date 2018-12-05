@@ -55,6 +55,8 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     # Bake substring indexes
     substr_index_root_dir = len( iDirs["root"] )
 
+    ProjectDependencies.utils.smart_gather_wtree_resolve_all_hash_inconsistencies( iDirs, iFiles )
+
     # If no regexp, path must match a real folder withing the working tree
     if bMustBeExact:
         if not arg_path[:substr_index_root_dir] == iDirs["root"]:

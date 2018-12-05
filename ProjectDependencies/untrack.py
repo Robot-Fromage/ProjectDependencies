@@ -50,6 +50,8 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     # Bake substring indexes
     substr_index_root_dir = len( iDirs["root"] )
 
+    ProjectDependencies.utils.smart_gather_wtree_resolve_all_hash_inconsistencies( iDirs, iFiles )
+
     # Preprocess arg path
     if arg_path.endswith( '*' ):
             arg_path = arg_path[:-1]

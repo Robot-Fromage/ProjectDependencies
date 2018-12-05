@@ -33,16 +33,9 @@ import os
 def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
-    # Gather working tree, index and stage
-    stage_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
-    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
-
-    tpr = ProjectDependencies.utils.resolve_inconsistencies( stage_list_with_hash, [ index_list_with_hash ] )
-    sorted_stage_list_with_hash = tpr[0]
-    sorted_index_list_with_hash = tpr[1][0]
-
-    # Gather list anew
+    ProjectDependencies.utils.smart_gather_wtree_resolve_all_hash_inconsistencies( iDirs, iFiles )
     resolved_index_list_with_hash = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
+    sorted_stage_list_with_hash = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
 
     # Complete stage list
     for entry in sorted_stage_list_with_hash:

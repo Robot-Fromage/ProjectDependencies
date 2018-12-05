@@ -41,6 +41,7 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
         print( style_text  )
 
     def print_entry( iEntry ):
+        # Bake
         name    = iEntry["name"]
         alias   = iEntry["alias"]
         args    = iEntry["args"]
@@ -51,14 +52,15 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
         lalias  = len( alias )
         largs   = len( args )
         lshort  = len( short )
-        iname = 4
-        ialias = 16
-        iargs = 24
-        ishort = 40
+        iname   = 4
+        ialias  = 16
+        iargs   = 24
+        ishort  = 40
         offset0 = ProjectDependencies.utils.make_offset( iname )
         offset1 = ProjectDependencies.utils.make_offset( ialias - lname - iname )
         offset2 = ProjectDependencies.utils.make_offset( iargs - lalias - ialias )
         offset3 = ProjectDependencies.utils.make_offset( ishort - largs - iargs )
+        # Print
         print( offset0 + name + offset1 + alias + offset2 + args + offset3 + short )
 
     # help command
@@ -88,5 +90,5 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
             print( "" )
             print( entry["doc"] )
             break
-    
+
     if not bFound: ProjectDependencies.utils.command_error( help_command )

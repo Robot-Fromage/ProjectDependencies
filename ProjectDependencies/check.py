@@ -36,28 +36,7 @@ init_colorama()
 def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
-    # Gather track & ignore & git track
-    track_list          = ProjectDependencies.utils.gather_list( iFiles["track"] )
-    ignore_list         = ProjectDependencies.utils.gather_list( iFiles["ignore"] )
-    git_tracked_files   = ProjectDependencies.utils.gather_git_tracked_files( iDirs["root"] )
-    # Concatenate ignore with git tracked
-    ignore_list.extend( git_tracked_files )
-
-    # Gather working tree, index and stage
-    working_tree_list_with_hash = ProjectDependencies.utils.gather_working_tree_list_with_hash( iDirs["root"], track_list, ignore_list )
-    stage_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["stage"] )
-    index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
-
-    tpr = ProjectDependencies.utils.resolve_inconsistencies( working_tree_list_with_hash, [ stage_list_with_hash, index_list_with_hash ] )
-    sorted_working_tree_list_with_hash = tpr[0]
-    sorted_stage_list_with_hash = tpr[1][0]
-    sorted_index_list_with_hash = tpr[1][1]
-
-    # Write new lists
-    ProjectDependencies.utils.update_list_with_hash( iFiles["stage"], sorted_stage_list_with_hash )
-    ProjectDependencies.utils.update_list_with_hash( iFiles["index"], sorted_index_list_with_hash )
-
-    # Gather index anew
+    ProjectDependencies.utils.smart_gather_wtree_resolve_all_hash_inconsistencies( iDirs, iFiles )
     index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
 
     # Check for inconsistencies in index against working directory

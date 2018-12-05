@@ -60,6 +60,7 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     substr_index_arg_path = len( arg_path )
 
     # Gather index
+    ProjectDependencies.utils.smart_gather_wtree_resolve_all_hash_inconsistencies( iDirs, iFiles )
     index_list_with_hash        = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
 
     # Trim from stage if needed

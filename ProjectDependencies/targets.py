@@ -32,8 +32,6 @@ import ProjectDependencies.utils
 def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
-    # Gather track
-    ProjectDependencies.utils.check_create_file( iFiles["track"] )
     track_list = ProjectDependencies.utils.gather_list( iFiles["track"] )
 
     def print_entry( iEntry ):

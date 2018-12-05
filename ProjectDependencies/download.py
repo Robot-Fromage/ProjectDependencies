@@ -39,15 +39,19 @@ init_colorama()
 def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.notify_ignore_args( iArgs )
 
+    ProjectDependencies.utils.smart_gather_wtree_resolve_all_hash_inconsistencies( iDirs, iFiles )
+
     # Bake utility strings from gathered information
     src = iConfig["remote"] + iConfig["file"]
-    dst = iDirs["tmp"] + iConfig["file"]
-    ProjectDependencies.utils.check_create_dir( iDirs["tmp"] )
+    dst = iDirs["tmp"]      + iConfig["file"]
+
+    # Create tmp dir
+    ProjectDependencies.utils.mkdirtree( iDirs["tmp"] )
 
     # Bake request
-    resp = urlreq.urlopen(src)
-    length = resp.headers['content-length']
-    blocksize = 1000000 # arbitrary size
+    resp        = urlreq.urlopen(src)
+    length      = resp.headers['content-length']
+    blocksize   = 1000000 # arbitrary size
 
     if length:
         length = int(length)
@@ -67,7 +71,7 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
             print( "Downloading file '{0}' from remote '{1}': {2:2.1%}".format( iConfig["file"], iConfig["remote"], size / length ), end="\r" )
     print("")
 
-    # Dump to file, write binary
+    # Dump file, write binary
     handle = open( dst, "wb" )
     handle.write( buffer.getvalue() )
     handle.close()
@@ -77,40 +81,45 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     tar = tarfile.open( dst, 'r:gz' )
     tar.extractall( iDirs["tmp"] )
     tar.close()
-    
+
     # Install
-    index_list = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
-    total = len( index_list )
-    count = 0
-    bFoundMissing = False
-    missing_list = []
+    index_list          = ProjectDependencies.utils.gather_list_with_hash( iFiles["index"] )
+    total               = len( index_list )
+    count               = 0
+    bFoundMissing       = False
+    missing_list        = []
     num_installed_files = 0
+
     for entry in index_list:
-        tmp_file = iDirs["tmp"] + entry["file"]
-        install_file = iDirs["root"] + entry["file"]
+        tmp_file        = iDirs["tmp"]  + entry["file"]
+        install_file    = iDirs["root"] + entry["file"]
+
         if not os.path.exists( tmp_file ):
+            # Error, file indexed but not in dep
             bFoundMissing = True
             missing_list.append( entry["file"] )
         else:
+            # Cool: we can install file, prepare its dir and copy
             num_installed_files += 1
             dstdir = os.path.dirname( os.path.realpath( install_file ) )
             ProjectDependencies.utils.mkdirtree( dstdir )
             shutil.copyfile( tmp_file, install_file )
-
         count += 1
-        if total:
+        if total: # Avoid divide by 0
+            # Print feedback
             print( "Installing files {:2.1%}".format( count / total ), end="\r" )
     print( "" )
 
+    # Report errors
     if bFoundMissing:
-        print( "warning: indexed entries are missing from downloaded dependencies")
+        print( "warning: some indexed entries are missing from downloaded dependencies" )
         print( Fore.RED )
         for entry in missing_list:
             print( ProjectDependencies.utils.make_offset( 4 ) + "missing from dependency: " + entry )
         print( Style.RESET_ALL )
 
-    
+    # Clean behin, delete tmp
     shutil.rmtree( iDirs["tmp"] )
 
+    # Report install
     print( "Done. Installed {0} files".format( num_installed_files ) )
-    

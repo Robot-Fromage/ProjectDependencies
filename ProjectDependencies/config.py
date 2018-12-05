@@ -36,11 +36,11 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
         name    = iEntry + ":"
         value   = iConfig[iEntry]
 
-        lname   = len( name )
-        iname = 4
-        ivalue = 16
+        lname   = len( name )   # offset length of name
+        iname = 4               # offset index of name
+        ivalue = 16             # offset index of value
 
-        if isinstance( value, str):
+        if isinstance( value, str ):
             offset0 = ProjectDependencies.utils.make_offset( iname )
             offset1 = ProjectDependencies.utils.make_offset( ivalue - lname - iname )
             print( offset0 + name + offset1 + value )
@@ -51,8 +51,6 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
             print( offset0 + name )
             for entry in value:
                  print( offset1 + entry )
-                
-    exclude = []
+
     for entry in iConfig:
-        if not entry in exclude:
-            print_entry( entry )
+        print_entry( entry )
