@@ -145,8 +145,8 @@ def gather_working_tree_list_with_hash( iRootDir, iTrackList, iIgnoreList ):
                 if not bIgnored:
                     fhash = sha256sum( filename )
                     working_tree_list.append( { "file": relative_filename, "hash": fhash } )
-                    count += 1
             # Print feedback
+            count += 1
             print( "Parsing elements in working directory: {0}".format( count ), end="\r" )
     # Pretty line break
     if len( iTrackList ):
