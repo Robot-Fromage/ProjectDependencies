@@ -38,6 +38,14 @@ def system(*args, **kwargs):
     return out
 
 #:::::::::::::::::::::::::
+# Path checks
+def ensureValidPathEnding( iPath ):
+    outPath = iPath
+    if not outPath.endswith( '/' ):
+        outPath = outPath + '/'
+    return outPath
+
+#:::::::::::::::::::::::::
 # Errors
 def fatal_error_file_X( iFile, iMessage ):
     print( "error: file '" + iFile + "' " + iMessage )

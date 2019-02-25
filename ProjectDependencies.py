@@ -35,15 +35,13 @@ import os, sys
 # Import Setup
 script_dir      = os.path.dirname( os.path.realpath( __file__ ) ).replace( os.sep, '/' ) + '/'  # The directory in which the script is located.
 parent_repo_dir = os.path.realpath( script_dir + "../" ).replace( os.sep, '/' )                 # The parent repository in which ProjectDependencies is located.
-
-# Fix parent repo dir path if needed
-if not parent_repo_dir.endswith( '/' ):
-        parent_repo_dir = parent_repo_dir + '/'
-
 sys.path.append( script_dir )                                                                   # Add script dir to sys path in order to import relative modules.
 # Import local relative utils module.
 import ProjectDependencies.utils
 
+# Fix paths if needed
+script_dir = ProjectDependencies.utils.ensureValidPathEnding( script_dir )
+parent_repo_dir = ProjectDependencies.utils.ensureValidPathEnding( parent_repo_dir )
 
 #:::::::::::::::::::::::::
 # Gather Files Paths
@@ -74,9 +72,9 @@ keys    = ProjectDependencies.utils.load_json_with_keys_checked( files["keys"], 
 #:::::::::::::::::::::::::
 # Gather Dirs
 dirs = {}
-dirs["root"]    = os.path.realpath( script_dir + config["root"] ).replace( os.sep, '/' )    # The root of the parent repository.
-dirs["tmp"]     = parent_repo_dir + config["tmp"]                                           # The location of tmp in parent repository.
-dirs["script"]  = script_dir                                                                # The location of the script directory.
+dirs["root"]    = ProjectDependencies.utils.ensureValidPathEnding( os.path.realpath( script_dir + config["root"] ).replace( os.sep, '/' ) ) # The root of the parent repository.
+dirs["tmp"]     = ProjectDependencies.utils.ensureValidPathEnding( parent_repo_dir + config["tmp"] )                                        # The location of tmp in parent repository.
+dirs["script"]  = ProjectDependencies.utils.ensureValidPathEnding( script_dir )                                                             # The location of the script directory.
 
 
 #:::::::::::::::::::::::::
