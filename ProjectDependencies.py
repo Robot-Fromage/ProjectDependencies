@@ -35,6 +35,11 @@ import os, sys
 # Import Setup
 script_dir      = os.path.dirname( os.path.realpath( __file__ ) ).replace( os.sep, '/' ) + '/'  # The directory in which the script is located.
 parent_repo_dir = os.path.realpath( script_dir + "../" ).replace( os.sep, '/' )                 # The parent repository in which ProjectDependencies is located.
+
+# Fix parent repo dir path if needed
+if not parent_repo_dir.endswith( '/' ):
+        parent_repo_dir = parent_repo_dir + '/'
+
 sys.path.append( script_dir )                                                                   # Add script dir to sys path in order to import relative modules.
 # Import local relative utils module.
 import ProjectDependencies.utils
