@@ -32,6 +32,7 @@ import urllib.request as urlreq
 import os, io
 import shutil
 import tarfile
+import ssl
 from colorama import Fore, Back, Style
 from colorama import init as init_colorama
 init_colorama()
@@ -49,7 +50,7 @@ def command( iArgs, iFiles, iConfig, iDirs, iKeys ):
     ProjectDependencies.utils.mkdirtree( iDirs["tmp"] )
 
     # Bake request
-    resp        = urlreq.urlopen(src)
+    resp        = urlreq.urlopen( src, context=ssl._create_unverified_context() )
     length      = resp.headers['content-length']
     blocksize   = 1000000 # arbitrary size
 
